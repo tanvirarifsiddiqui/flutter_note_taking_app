@@ -1,0 +1,127 @@
+Phase 1: Project Initialization & Dependency Setup
+1.1. Create Flutter project
+  - Run flutter create note_app_mvvm
+  - Confirm Flutter 3.x SDK compatibility
+1.2. Add core dependencies to pubspec.yaml
+  - get: for state management, navigation, DI
+  - hive & hive_flutter: for local storage
+  - build_runner & hive_generator: for code generation
+1.3. Initialize Git repository & basic CI
+  - git init, add .gitignore for Flutter, Hive, IDE files
+  - (Optional) Set up GitHub Actions or other CI to run flutter analyze and flutter test
+1.4. Configure entrypoint
+  - Replace MaterialApp with GetMaterialApp in main.dart
+  - Initialize Hive (await Hive.initFlutter()) before runApp()
+
+Phase 2: Folder Structure & Architectural Scaffolding
+2.1. Define core module directories under lib/
+  - core/: utilities, constants, themes, routing
+  - data/: models, data sources, repositories
+  - domain/: abstract repositories, use-cases (optional)
+  - presentation/: controllers (ViewModels), views, widgets
+2.2. Create subfolders in each module
+  - data/models/, data/services/, data/repositories/
+  - presentation/controllers/, presentation/views/, presentation/widgets/
+2.3. Establish binding and route files
+  - core/bindings/: bind controllers to views
+  - core/routes/app_pages.dart: define GetPage list
+2.4. Document architectural overview
+  - Create a simple diagram: Model ←→ Controller ←→ View
+  - Explain where GetX replaces ViewModel and handles DI, navigation, state
+
+Phase 3: Model Layer & Hive Configuration
+3.1. Define Note data model
+  - Fields: id, title, content, timestamp, isArchived
+3.2. Apply Hive annotations
+  - @HiveType(typeId: 0) on Note class
+  - @HiveField(n) on each field
+3.3. Generate Hive adapter
+  - Add part 'note.g.dart';
+  - Run flutter pub run build_runner build
+3.4. Register adapters at startup
+  - In main(), call Hive.registerAdapter(NoteAdapter())
+
+Phase 4: Data Layer & Repository Implementation
+4.1. Define abstract repository interface
+  - Methods: Future<List<Note>> fetchAll(), Future<void> add(Note), etc.
+4.2. Implement Hive-based repository
+  - Use Hive box to store/retrieve Note objects
+  - Handle migrations and box versioning
+4.3. Integrate repository in DI
+  - In a core/bindings/data_binding.dart, Get.lazyPut<NoteRepository>(() => HiveNoteRepository())
+4.4. Write simple data-layer smoke tests
+  - Verify CRUD operations on Hive box
+
+Phase 5: ViewModel Layer with GetX Controllers
+5.1. Create NoteController extending GetxController
+  - Define RxList<Note> notes = <Note>[].obs
+  - Define Rx<note?> selectedNote = Rx<note?>(null)
+5.2. Implement CRUD methods
+  - loadNotes(), addNote(), updateNote(), deleteNote()
+  - Wrap operations in try/catch and update observables
+5.3. Utilize StateMixin for loading/error states
+  - extends GetxController with StateMixin<List<Note>>
+  - Use change(data, status: RxStatus.success())
+5.4. Add reactive workers for persistence
+  - ever(notes, (_) => repository.saveAll(notes))
+
+Phase 6: Presentation Layer – Views & Reusable Widgets
+6.1. Design reusable UI components
+  - NoteCard: displays title, snippet, date
+  - AppTextField and AppButton: consistent styling
+6.2. Build main views
+  - NotesListView: Obx-wrapped ListView of NoteCard
+  - NoteDetailView: shows full content, edit/delete actions
+  - AddEditNoteView: form with validation, saving logic
+6.3. Wire up controllers in views
+  - Use Get.find<NoteController>() or Bindings
+  - Wrap reactive UI with Obx() or GetX<NoteController>()
+6.4. Implement empty/loading/errors states
+  - Use notesController.obx(...), display placeholders
+
+Phase 7: Navigation, Dependency Injection & Bindings
+7.1. Define GetPage routes in app_pages.dart
+  - Map route names to views and respective Bindings
+7.2. Create Binding classes per module
+  - NotesBinding: inject NoteController, repository binding
+7.3. Navigate between screens
+  - Get.toNamed(Routes.ADD_NOTE), Get.offAllNamed(Routes.HOME)
+7.4. Configure global middleware (optional)
+  - E.g., authentication guard, logging
+
+Phase 8: Theming & Application Utilities
+8.1. Implement ThemeService using GetStorage
+  - Toggle light/dark mode without BuildContext via Get.changeTheme()
+8.2. Centralize constants & styles
+  - Colors, text styles, spacing in core/constants/
+8.3. Utility classes
+  - Date formatting helper
+  - Snackbar and dialog wrappers via GetX
+
+Phase 9: Advanced Storage & Data Persistence
+9.1. Manage Hive box upgrades
+  - Box versioning strategy, data migrations
+9.2. Integrate optional GetStorage
+  - Store user preferences (e.g., sorting order)
+9.3. Backup & export notes
+  - JSON export/import feature using file picker
+
+Phase 10: Testing, Code Quality & CI
+10.1. Unit tests for controllers
+  - Mock repository, verify state transitions
+10.2. Widget tests for views
+  - Pump widgets with GetMaterialApp, assert UI reactions
+10.3. Linting & formatting
+  - Enforce effective Dart rules, run flutter format
+10.4. Integrate tests into CI pipeline
+  - Fail build on test or lint errors
+
+Phase 11: Documentation, Deployment & Maintenance
+11.1. Write developer README
+  - Project overview, architecture diagram, setup steps
+11.2. API and module documentation
+  - Document controllers, services, and public methods
+11.3. Build and distribute
+  - Generate Android APK, iOS IPA; configuration for flavors
+11.4. Post-release plan
+  - Issue tracking, feature backlog, versioning strategy
