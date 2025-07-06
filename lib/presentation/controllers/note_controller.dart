@@ -40,6 +40,7 @@ class NoteController extends GetxController with StateMixin<List<Note>>{
     try{
       change(null, status: RxStatus.loading());
       final loadedNotes = await repository.fetchAll();
+      print(loadedNotes);//todo have to remove this
       notes.assignAll(loadedNotes);
       change(loadedNotes, status: RxStatus.success());
     }catch (e) {
@@ -50,6 +51,7 @@ class NoteController extends GetxController with StateMixin<List<Note>>{
   //Adds a new note and updates State
   Future<void> addNote(Note note) async {
     try{
+      print(note.content);
       await repository.add(note);
       notes.add(note);
     }catch (e) {

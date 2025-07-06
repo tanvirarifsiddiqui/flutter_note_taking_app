@@ -21,7 +21,7 @@ void main() async {
     ..registerAdapter(NoteAdapter());
 
   // Open a test box
-  final box = await Hive.openBox<Note>('testNotesBox');
+  final box = await Hive.openBox<Note>('notesBox');
   final NoteRepository repository = HiveNoteRepository(box);
 
   test('Add and fetch note', () async {
